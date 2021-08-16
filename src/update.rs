@@ -1,25 +1,18 @@
 use mongodb::bson::{doc};
 use std::error::Error;
-use crate::{db::DB};
+use crate::{db::DB, get::Movie};
 
-pub async fn update_data() -> Result<(), Box<dyn Error>> {
-   let client = DB::init().await?;
+pub fn update_data(movie: Movie) -> Result<(), mongodb::error::Error> {
+   let client = DB::init()?;
    let client = client.client;
 
    // Get the 'movies' collection from the 'sample_mflix' database:
-   let movies = client.database("rust_mongo").collection("movies");
+   let movies = client.database("rust_mongo").collection_with_type::<Movie>("movies");
 
-   // Look up one document:
-   let movie = movies
-      .find_one(
-         doc! {
-               "title": "Parasite"
-         },
-         None,
-      )
-      .await?
-      .expect("Missing 'Parasite' document.");
-   println!("Movie: {}", movie);
+   // Insert one Movie
+   let insert_result = movies
+      .insert_one(movie, None)?;
+   println!("Movie mongodb _id: {}", insert_result.inserted_id);
 
    Ok(())
 }
